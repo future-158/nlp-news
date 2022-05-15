@@ -19,5 +19,6 @@ konlpk: # install rapids -> pytorch -> sentence_transformer
 sbert:
 	conda create --name sbert -y -c pytorch -c conda-forge \
 	pytorch cudatoolkit=11.3 sentence-transformers \
-	pip ipykernel omegaconf joblib imbalanced-learn  umap-learn hdbscan
+	pip ipykernel omegaconf joblib matplotlib \
+	imbalanced-learn umap-learn hdbscan pandas 
 
