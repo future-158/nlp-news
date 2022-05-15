@@ -1,0 +1,16 @@
+channels:
+  - rapidsai
+  - pytorch
+  - conda-forge
+dependencies:
+  - pip
+  - python=3.8
+  - cuml=22.04
+  - joblib
+  - ipykernel
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - cudatoolkit=11.4
+  - pylint
+  - black

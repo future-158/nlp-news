@@ -1,0 +1,19 @@
+catalog:
+  raw:
+    train: data/raw/newszum_train_data.csv
+    test: data/raw/newszum_test_data.csv
+  
+  translated: data/translated.csv
+
+  # noun:
+  #   train: data/lemma/train.csv
+  #   valid: data/lemma/valid.csv
+  #   test: data/lemma/test.csv
+
+
+  bbc:
+    raw: data/bbc
+    train: data/pretrain/train.npz
+    test: data/pretrain/test.npz
+  appendix: data/appendix.csv
+
