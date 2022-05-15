@@ -13,7 +13,7 @@ cfg = OmegaConf.load("conf/config.yaml")
 categories = ["politics", "tech", "sport", "business", "entertainment"]
 items = []
 for category in categories:
-    for doc in (Path(cfg.catalog.pretrain.raw) / category).glob("*.txt"):
+    for doc in (Path(cfg.catalog.bbc.raw) / category).glob("*.txt"):
         with open(doc, "r") as f:
             item = {
                 "category": category,
@@ -34,3 +34,7 @@ renamer = {
 }
 
 appendix.category = appendix.category.map(renamer)
+
+appendix.to_csv(
+    cfg.catalog.appendix, index=False
+)

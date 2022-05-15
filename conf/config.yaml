@@ -13,7 +13,5 @@ catalog:
 
   bbc:
     raw: data/bbc
-    train: data/pretrain/train.npz
-    test: data/pretrain/test.npz
   appendix: data/appendix.csv
 
