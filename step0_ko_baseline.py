@@ -6,11 +6,14 @@ import numpy as np
 import pickle
 from omegaconf import OmegaConf
 import joblib
-from konlpy.tag import Kkma, Okt
 import tqdm
-
+from statistics import mode
+from sklearn.metrics import accuracy_score
 
 cfg = OmegaConf.load("conf/config.yaml")
+
+for folder in cfg.dirs:
+    Path(folder).mkdir(parents=True, exist_ok=True)
 
 # load train, test
 train_valid = pd.read_csv( 
@@ -35,13 +38,10 @@ train['mergeBody'] = train.title.str.strip() + ' ' +  train.cleanBody.str.strip(
 valid['mergeBody'] = valid.title.str.strip() + ' ' +  valid.cleanBody.str.strip()
 test['mergeBody'] = test.title.str.strip() + ' ' +  test.cleanBody.str.strip()
 
-okt = Okt()
-train['nounBody'] = [ okt.nouns(sentence) for sentence in tqdm.tqdm(train['mergeBody'].tolist())]
-valid['nounBody'] = [okt.nouns(sentence) for sentence in tqdm.tqdm(valid['mergeBody'].tolist())]
-test['nounBody'] = [okt.nouns(sentence) for sentence in tqdm.tqdm(test['mergeBody'].tolist())]
-
-train['nounBody'].str.join()
-
+# okt = Okt()
+# train['nounBody'] = [ okt.nouns(sentence) for sentence in tqdm.tqdm(train['mergeBody'].tolist())]
+# valid['nounBody'] = [okt.nouns(sentence) for sentence in tqdm.tqdm(valid['mergeBody'].tolist())]
+# test['nounBody'] = [okt.nouns(sentence) for sentence in tqdm.tqdm(test['mergeBody'].tolist())]
 
 # import cudf, cuml, cupy
 # from cuml.feature_extraction.text import TfidfVectorizer
@@ -65,8 +65,6 @@ model = NearestNeighbors(n_neighbors=KNN)
 model.fit(train_embeddings)
 
 
-from statistics import mode
-from sklearn.metrics import accuracy_score
 
 # evaluate valid set
 distances, indices = model.kneighbors(valid_embeddings)
@@ -80,4 +78,21 @@ distances, indices = model.kneighbors(test_embeddings)
 yhat = [mode(row) for row in train.category.values[indices]]
 test_score = accuracy_score(test.category, yhat)
 assert test_score >= 0.7
+
+
+
+OmegaConf.save(
+    OmegaConf.create(
+    {
+    'accuracy': {
+        'test': float(test_score),
+    }
+    }), cfg.catalog.metric.base
+    )
+
+
+
+
+
+
 

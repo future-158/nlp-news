@@ -1,3 +1,5 @@
+
+dirs: [ data/raw, data/bbc, data/metric]
 catalog:
   raw:
     train: data/raw/newszum_train_data.csv
@@ -14,4 +16,7 @@ catalog:
   bbc:
     raw: data/bbc
   appendix: data/appendix.csv
+
+  metric:
+    base: data/metric/base.yaml
 
