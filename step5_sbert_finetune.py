@@ -106,9 +106,12 @@ output_path = (
     + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 )
 
+# model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+# params = sum([p.sum() for p in model_parameters])
 
-model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-params = sum([np.prod(p.size()) for p in model_parameters])
+# loaded = torch.load('output/finetune-batch-hard-trec--2022-05-15_23-36-10/pytorch_model.bin')
+# model = model.load_state_dict(state_dict=loaded, strict=False)
+
 
 model = model.train(True)
 model.fit(
