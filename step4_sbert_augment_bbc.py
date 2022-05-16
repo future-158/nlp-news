@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+
 import pickle
 import os
 from pathlib import Path
@@ -16,13 +17,7 @@ from statistics import mode
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC, LinearSVC
 
-import tensorflow as tf
-from tensorflow import keras
-# import tensorflow_hub as hub
-import tensorflow_decision_forests as tfdf
-
 cfg = OmegaConf.load("conf/config.yaml")
-
 
 df = pd.read_csv(
     cfg.catalog.translated
@@ -40,16 +35,32 @@ valid_index = (
 valid_mask = df.index.isin(valid_index)
 df.loc[valid_mask, 'split'] = 'valid'
 
+
+appendix = pd.read_csv(
+    cfg.catalog.appendix
+)
+
+
+# use bbc data for only train(not valid).
+# because i dont want valid set distribution differ from test set.
+appendix['split'] = 'train'
+df = df.append(appendix)
+
 cls2idx = {k:i for i, k in enumerate(sorted(df.category.unique()))}
 labels = df.category.map(cls2idx).values
+
+# regenerate mask because dataset size changed after append bbc.
+train_mask = df.split == 'train'
+valid_mask = df.split == 'valid'
 test_mask = df.split == 'test'
 
+assert len(cls2idx ) == 8 # sanity test
 
 model = SentenceTransformer('all-distilroberta-v1', device='cuda')
 model.max_seq_length = 500
 
 encode_kwargs = dict(
-        batch_size = 32,
+        batch_size = 128,
         # output_value = 'token_embeddings',
         convert_to_numpy = True,
         show_progress_bar=True,
@@ -62,7 +73,6 @@ embeddings = model.encode(
     **encode_kwargs
     )
 
-train_mask = np.logical_and(~valid_mask, ~test_mask)
 
 # fit svc
 model = LinearSVC()
@@ -80,7 +90,6 @@ train_valid_mask = np.logical_or(train_mask, valid_mask)
 model = LinearSVC()
 model.fit(embeddings[train_valid_mask], labels[train_valid_mask])
 
-
 test_pred = model.predict(embeddings[test_mask])
 test_acc = accuracy_score(
     labels[test_mask], test_pred
@@ -93,14 +102,6 @@ OmegaConf.save(
     'accuracy': {
         'test': float(test_acc),
     }
-    }), cfg.catalog.metric.en_base
+    }), cfg.catalog.metric.en_augment
     )
 
-
-idx2cls = {v:k for k,v in cls2idx.items()}
-
-
-df.loc[test_mask, 'result'] = pd.Series(test_pred).map(idx2cls).values
-df.to_csv(
-        cfg.catalog.output.en_base, index=False
-    )

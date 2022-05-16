@@ -1,5 +1,6 @@
 
-dirs: [ data/raw, data/bbc, data/metric]
+dirs: [ data/raw, data/bbc, data/metric, data/model_out, data/model]
+
 catalog:
   raw:
     train: data/raw/newszum_train_data.csv
@@ -7,16 +8,27 @@ catalog:
   
   translated: data/translated.csv
 
-  # noun:
-  #   train: data/lemma/train.csv
-  #   valid: data/lemma/valid.csv
-  #   test: data/lemma/test.csv
-
-
   bbc:
     raw: data/bbc
   appendix: data/appendix.csv
 
   metric:
     base: data/metric/base.yaml
+    en_base: data/metric/en_base.yaml
+    en_oversample: data/metric/en_oversample.yaml
+    en_augment: data/metric/en_augment.yaml
+    en_finetune: data/metric/en_finetune.yaml
+
+  output:
+    base: data/metric/base.csv
+    en_base: data/metric/en_base.csv
+    en_oversample: data/metric/en_oversample.csv
+    en_augment: data/metric/en_augment.csv
+    en_finetune: data/metric/en_finetune.csv
+
+  model:
+    output_path: "output/finetune-batch-hard-trec-"
+
+  submit: data/submit.csv
+
 

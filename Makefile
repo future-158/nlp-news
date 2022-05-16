@@ -9,16 +9,12 @@ install: # install rapids -> pytorch -> sentence_transformer
 	pip install tensorflow_decision_forests --upgrade
 	conda install -y -n $(NAME) -c conda-forge imbalanced-learn ipykernel omegaconf joblib
 	
-	
-
-
-konlpk: # install rapids -> pytorch -> sentence_transformer
-	conda create -y -n konlpk python=3.8 pip 
-	conda run -n konlpk python -m pip install konlpy ipykernel pandas omegaconf joblib soynlp soykeyword tqdm scikit-learn
-
 sbert:
 	conda create --name sbert -y -c pytorch -c conda-forge \
 	pytorch cudatoolkit=11.3 sentence-transformers \
 	pip ipykernel omegaconf joblib matplotlib \
-	imbalanced-learn umap-learn hdbscan pandas 
+	imbalanced-learn pandas
+	conda run --name sbert python -m pip install \
+	tensorflow tensorflow_decision_forests --upgrade
+	pip install -U transformers tokenizers
 

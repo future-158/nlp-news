@@ -15,12 +15,7 @@ from matplotlib.pyplot import figure
 from statistics import mode
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC, LinearSVC
-
-import tensorflow as tf
-from tensorflow import keras
-# import tensorflow_hub as hub
-import tensorflow_decision_forests as tfdf
-
+from imblearn.over_sampling import SMOTE
 cfg = OmegaConf.load("conf/config.yaml")
 
 
@@ -37,12 +32,15 @@ valid_index = (
     .index
 )
 
+
 valid_mask = df.index.isin(valid_index)
 df.loc[valid_mask, 'split'] = 'valid'
+
 
 cls2idx = {k:i for i, k in enumerate(sorted(df.category.unique()))}
 labels = df.category.map(cls2idx).values
 test_mask = df.split == 'test'
+train_mask = np.logical_and(~valid_mask, ~test_mask)
 
 
 model = SentenceTransformer('all-distilroberta-v1', device='cuda')
@@ -62,11 +60,21 @@ embeddings = model.encode(
     **encode_kwargs
     )
 
-train_mask = np.logical_and(~valid_mask, ~test_mask)
+# oversampling
+sampling_strategy = pd.Series(labels[train_mask]).value_counts()
+sampling_strategy.loc[:] = sampling_strategy.max()
+sampling_strategy = sampling_strategy.to_dict()
 
-# fit svc
+sampler = SMOTE(
+    sampling_strategy = sampling_strategy,
+    random_state=1
+)
+
+X_resampled, y_resampled = sampler.fit_resample(
+    embeddings[train_mask], labels[train_mask])
+
 model = LinearSVC()
-model.fit(embeddings[train_mask], labels[train_mask])
+model.fit(X_resampled, y_resampled)
 
 valid_pred = model.predict(embeddings[valid_mask])
 valid_acc = accuracy_score(
@@ -74,12 +82,12 @@ valid_acc = accuracy_score(
 )
 assert valid_acc > 0.7
 
+# refit with  train + valid
 
-# refit with train + valid
-train_valid_mask = np.logical_or(train_mask, valid_mask)
+X_agg = np.concatenate([X_resampled, embeddings[valid_mask]])
+y_agg = np.concatenate([y_resampled, labels[valid_mask]])
 model = LinearSVC()
-model.fit(embeddings[train_valid_mask], labels[train_valid_mask])
-
+model.fit(X_agg, y_agg)
 
 test_pred = model.predict(embeddings[test_mask])
 test_acc = accuracy_score(
@@ -93,14 +101,7 @@ OmegaConf.save(
     'accuracy': {
         'test': float(test_acc),
     }
-    }), cfg.catalog.metric.en_base
+    }), cfg.catalog.metric.en_oversample
     )
 
 
-idx2cls = {v:k for k,v in cls2idx.items()}
-
-
-df.loc[test_mask, 'result'] = pd.Series(test_pred).map(idx2cls).values
-df.to_csv(
-        cfg.catalog.output.en_base, index=False
-    )

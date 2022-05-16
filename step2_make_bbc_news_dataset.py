@@ -26,11 +26,11 @@ appendix = pd.DataFrame(items)
 
 # merge categories
 renamer = {
-    "politics": 5, # politics
-    "tech": 4,  # it
-    "sport": 7, # sport
-    "business": 1, # economy
-    "entertainment": 2, # entertain
+    "politics": "politics",
+    "tech": "it",
+    "sport": "sport",
+    "business": "economy",
+    "entertainment": "entertain"
 }
 
 appendix.category = appendix.category.map(renamer)

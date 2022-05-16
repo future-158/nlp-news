@@ -9,6 +9,9 @@ import joblib
 import tqdm
 from statistics import mode
 from sklearn.metrics import accuracy_score
+from sklearn.neighbors import NearestNeighbors
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import LinearSVC
 
 cfg = OmegaConf.load("conf/config.yaml")
 
@@ -47,8 +50,6 @@ test['mergeBody'] = test.title.str.strip() + ' ' +  test.cleanBody.str.strip()
 # from cuml.feature_extraction.text import TfidfVectorizer
 # from cuml.neighbors import NearestNeighbors
 
-from sklearn.neighbors import NearestNeighbors
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 model = TfidfVectorizer(
     # preprocessor=,
@@ -60,39 +61,37 @@ train_embeddings = model.fit_transform(train.mergeBody).toarray()
 valid_embeddings = model.transform(valid.mergeBody).toarray()
 test_embeddings = model.transform(test.mergeBody).toarray()
 
-KNN = 10
-model = NearestNeighbors(n_neighbors=KNN)
-model.fit(train_embeddings)
 
+# fit svc
+model = LinearSVC()
+model.fit(train_embeddings, train.category)
 
+valid_pred = model.predict(valid_embeddings)
+valid_acc = accuracy_score(
+    valid.category, valid_pred
+)
+assert valid_acc > 0.7
 
-# evaluate valid set
-distances, indices = model.kneighbors(valid_embeddings)
-yhat = [mode(row) for row in train.category.values[indices]]
-valid_score = accuracy_score(valid.category, yhat)
-assert valid_score >= 0.7
+# refit with train + valid
+model = LinearSVC()
+model.fit(
+    np.concatenate([train_embeddings, valid_embeddings]),
+    np.concatenate([train.category, valid.category])
 
+)
 
-# evaluate test set
-distances, indices = model.kneighbors(test_embeddings)
-yhat = [mode(row) for row in train.category.values[indices]]
-test_score = accuracy_score(test.category, yhat)
-assert test_score >= 0.7
-
-
+test_pred = model.predict(test_embeddings)
+test_acc = accuracy_score(
+    test.category, test_pred
+)
+assert test_acc > 0.7
 
 OmegaConf.save(
     OmegaConf.create(
     {
     'accuracy': {
-        'test': float(test_score),
+        'test': float(test_acc),
     }
-    }), cfg.catalog.metric.base
+    }), cfg.catalog.metric.en_base
     )
-
-
-
-
-
-
 
