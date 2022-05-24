@@ -1,3 +1,13 @@
+# update
+05-25
+add task/fine-tune step
+summary
+- from roberta pretrained, domain apdation with masked finetuning
+- from above model, fine tune sentence transformer with CosineSimilarityLoss
+- *!todo evaluation step*
+
+
+
 # flow
 - google translate로 이용하여 kr -> en 변환
 - 유명한 news classficiation 데이터셋인 bbc news dataset과 카테고리가 비슷하므로,
